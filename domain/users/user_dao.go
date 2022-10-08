@@ -2,9 +2,44 @@ package users
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/LinuxLoverCoder/bookstore_users-api/utils/date_utils"
 	"github.com/LinuxLoverCoder/bookstore_users-api/utils/errors"
 )
+
+//https://github.com/nvisibleinc/go-ari-library/blob/8d54a15dc2a4620195d7e8e74720919f754e1977/rabbitmq.go#L71-L100
+//
+//func (r *RabbitMQ) StartConsumer(topic string) (chan []byte, error) {
+//	c := make(chan []byte)
+//	channel, err := r.consumerConn.Channel()
+//	if err != nil {
+//		return nil, err
+//	}
+//	queue, err := channel.QueueDeclare(
+//		topic, // name of queue
+//		true,  // durable
+//		false, // delete when unused
+//		false, // exclusive
+//		true,  // nowait
+//		nil)   // arguments
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//	deliveries, err := channel.Consume(queue.Name, "", false, false, true, true, nil)
+//	if err != nil {
+//		return nil, err
+//	}
+//	go func(deliveries <-chan amqp.Delivery, c chan []byte) {
+//		for d := range deliveries {
+//			c <- d.Body
+//			d.Ack(false) // false does *not* mean don't acknowledge, see library docs for details
+//		}
+//	}(deliveries, c)
+//
+//	return c, nil
+//}
 
 var (
 	usersDB = make(map[int64]*User)
@@ -40,6 +75,9 @@ func (user *User) Save() *errors.RestErr {
 		}
 		return errors.NewBadRequestError(fmt.Sprintf("User %d does not exist", user.Id))
 	}
+	now := time.Now().UTC()
+	user.DateCreated = date_utils.GetNowString()
+
 	usersDB[user.Id] = user
 	return nil
 }
